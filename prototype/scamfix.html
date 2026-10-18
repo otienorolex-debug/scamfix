@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scamfix – Check before you share</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#14181f;--mu:#5d6675;--bd:#dfe3ea;--ac:#0b7a5a;--acx:#fff;--ok:#0b7a5a;--warn:#b7791f;--bad:#c0392b;--un:#5d6675;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--card:#171d25;--tx:#e8ecf1;--mu:#98a3b3;--bd:#2a3340;--ac:#2fbf94;--acx:#06251c;--ok:#2fbf94;--warn:#e0a84a;--bad:#ef6a5b;--un:#98a3b3}}
+:root[data-theme="dark"]{--bg:#0f1318;--card:#171d25;--tx:#e8ecf1;--mu:#98a3b3;--bd:#2a3340;--ac:#2fbf94;--acx:#06251c;--ok:#2fbf94;--warn:#e0a84a;--bad:#ef6a5b;--un:#98a3b3}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:28px;margin:0}h1 span{color:var(--ac)}
+.sub{color:var(--mu);margin:4px 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+textarea{width:100%;min-height:110px;border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--bg);color:var(--tx);font:inherit;resize:vertical}
+#drop{border:2px dashed var(--bd);border-radius:12px;padding:16px;text-align:center;color:var(--mu);margin-top:10px;cursor:pointer}
+#drop.on{border-color:var(--ac);color:var(--ac)}
+#prev{max-width:100%;max-height:200px;border-radius:8px;margin-top:10px;display:none}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:9px 14px}
+button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+button{min-height:44px;touch-action:manipulation}body{-webkit-text-size-adjust:100%}
+@media (max-width:480px){h1{font-size:24px}.score{font-size:32px}main{padding:16px 12px 40px}.card{padding:14px}}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:700;font-size:13px;border:1.5px solid currentColor}
+.v-likely_true{color:var(--ok)}.v-unverified{color:var(--un)}.v-misleading{color:var(--warn)}.v-likely_false{color:var(--bad)}
+.score{font-size:40px;font-weight:800;line-height:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.mini{border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--bg)}
+.mini b{display:block}.mu{color:var(--mu);font-size:14px}
+h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}
+ul{margin:6px 0 0;padding-left:20px}a{color:var(--ac)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips a{border:1px solid var(--bd);border-radius:99px;padding:5px 12px;text-decoration:none;background:var(--bg)}
+.note{font-size:13px;color:var(--mu);border-left:3px solid var(--warn);padding-left:10px;margin-top:10px}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.tier{border:1px solid var(--bd);border-radius:12px;padding:12px}.tier h4{margin:0}
+.err{color:var(--bad)}
+</style></head><body><main>
+<h1>Scam<span>fix</span></h1>
+<p class="sub">Paste a claim, a link, or a screenshot. Scamfix traces where it came from and tells you whether to trust it.</p>
+
+<section class="card">
+<textarea id="txt" placeholder="Paste the breaking news text, a link, or a forwarded WhatsApp message…"></textarea>
+<div id="drop">Drag and drop a screenshot or short video here, paste an image (Ctrl/Cmd+V), or tap to choose a file</div>
+<input type="file" id="file" accept="image/*,video/*" hidden>
+<img id="prev" alt="Screenshot preview">
+<div class="row"><button class="p" id="go">Check it</button><button id="clr">Clear</button><span id="st" class="mu"></span></div>
+</section>
+
+<div id="out"></div>
+
+<section class="card" id="histc" style="display:none"><h3>Recent checks (this device)</h3><div id="hist"></div><button id="hclr">Clear history</button></section>
+
+<section class="card">
+<h3>Which plan would you use? (prototype test)</h3>
+<div class="tiers">
+<div class="tier"><h4>Basic · Free</h4><p class="mu">Text and link checks, limited per day, credibility score.</p><button data-t="Basic">I'd use this</button></div>
+<div class="tier"><h4>Premium</h4><p class="mu">Screenshot checks, saved history, side-by-side outlet comparison, share-cards.</p><button data-t="Premium">I'd use this</button></div>
+<div class="tier"><h4>Pro</h4><p class="mu">Live web and news search, alerts for trending fakes, team dashboard and API.</p><button data-t="Pro">I'd use this</button></div>
+</div>
+<p id="vote" class="mu"></p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let img=null,imgData=null,sample=null,extra=[];
+const OUTLETS=[["BBC","bbc.com"],["CNN","cnn.com"],["Reuters","reuters.com"],["AP","apnews.com"],["Citizen Digital","citizen.digital"],["Nation","nation.africa"],["Al Jazeera","aljazeera.com"]];
+(async()=>{try{sample=await claude.use("sample")}catch(e){sample=null}if(!sample)$("st").textContent="AI engine unavailable in this view."})();
+
+function frames(f){return new Promise(res=>{const u=URL.createObjectURL(f),v=document.createElement("video"),out=[];v.muted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";v.src=u;
+  v.onerror=()=>{URL.revokeObjectURL(u);res(out)};
+  v.onloadedmetadata=async()=>{try{const d=v.duration||1,n=4,vw=v.videoWidth||640,vh=v.videoHeight||360,w=Math.min(vw,768),cv=document.createElement("canvas");cv.width=w;cv.height=Math.round(w*vh/vw);const c=cv.getContext("2d");
+   for(let i=0;i<n;i++){await new Promise(r=>{v.onseeked=r;v.currentTime=Math.max(0,Math.min(d-0.1,d*(i+0.5)/n))});c.drawImage(v,0,0,cv.width,cv.height);const b=await new Promise(r=>cv.toBlob(r,"image/jpeg",0.8));if(b)out.push(b)}}catch(e){}
+   URL.revokeObjectURL(u);res(out)}})}
+async function setImg(f){if(!f)return;extra=[];
+  if(f.type.startsWith("video/")){$("st").textContent="Reading video frames…";extra=await frames(f);if(!extra.length){$("st").textContent="Could not read that video. Try screenshots of key frames instead.";return}$("st").textContent="Video loaded ("+extra.length+" frames will be examined).";img=extra[0]}
+  else if(f.type.startsWith("image/"))img=f;else return;
+  const r=new FileReader();r.onload=()=>{imgData=r.result;$("prev").src=imgData;$("prev").style.display="block"};r.readAsDataURL(img)}
+$("drop").onclick=()=>$("file").click();
+if("ontouchstart" in window)$("drop").textContent="Tap to add a screenshot, photo or short video";
+$("file").onchange=e=>setImg(e.target.files[0]);
+["dragover","dragenter"].forEach(n=>$("drop").addEventListener(n,e=>{e.preventDefault();$("drop").classList.add("on")}));
+["dragleave","drop"].forEach(n=>$("drop").addEventListener(n,e=>{e.preventDefault();$("drop").classList.remove("on")}));
+$("drop").addEventListener("drop",e=>setImg(e.dataTransfer.files[0]));
+document.addEventListener("paste",e=>{for(const i of e.clipboardData.items)if(i.type.startsWith("image/")){setImg(i.getAsFile());break}});
+$("clr").onclick=()=>{$("txt").value="";img=null;extra=[];imgData=null;$("prev").style.display="none";$("out").innerHTML="";$("st").textContent=""};
+
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LABEL={likely_true:"Likely true",unverified:"Unverified",misleading:"Misleading",likely_false:"Likely false"};
+
+const PROMPT=`You are Scamfix, a misinformation-checking engine. The user submits a claim, link(s) and/or a screenshot of social media or breaking news.
+Do these steps:
+1. Extract the core claim and any URLs, account names or domains (read them from the screenshot too).
+2. Judge the ORIGIN: who first published it and how reliable that source/account type has been historically (reputation: high|mixed|low|unknown).
+3. State what established outlets (BBC, CNN, Reuters, AP, Citizen Digital, Nation etc.) would have reported, i.e. the original/real version of the story if you know it.
+4. Extract WHO (people/organisations and their roles, and whether the person plausibly holds that role/said it), WHERE and WHEN.
+5. List red flags (urgency, no source, edited screenshot cues, old story recycled, emotional bait).
+6. AI/EDIT CHECK: estimate how likely the text is AI-written (generic phrasing, uniform structure, no concrete verifiable details, invented-sounding quotes) and how likely any image or video frames are AI-generated or edited (warped hands/text, inconsistent lighting or shadows, odd skin or backgrounds, mismatched fonts or compression, cloned areas, impossible details). For video you only see a few still frames, not audio or motion.
+RULES: You have NO live web access. Rely only on what you know and what is in the input. Never invent quotes, URLs or facts. If you cannot confirm, use verdict "unverified" and say so. Recent events may postdate your knowledge: lower confidence accordingly. AI detection is unreliable: give likelihoods as signals not proof, use null when there is no text or no image to judge, prefer low confidence, and remember human writing is often wrongly flagged as AI.
+Return ONLY JSON (no markdown) with keys:
+{"claim":str,"verdict":"likely_true|unverified|misleading|likely_false","score":0-100 credibility,"summary":str(2-3 sentences),"who":[{"name":str,"role":str,"note":str}],"where":str,"when":str,"origin":{"source":str,"type":"news outlet|official|social account|blog|chat forward|unknown","reputation":"high|mixed|low|unknown","reasoning":str},"original_story":{"text":str,"confidence":"high|medium|low"},"red_flags":[str],"search_query":str(5-8 keywords to find the real story),"next_steps":[str],"ai_check":{"text_ai_likelihood":0-100 or null,"media_ai_likelihood":0-100 or null,"manipulation_signals":[str],"basis":str,"confidence":"low|medium|high"}}`;
+
+$("go").onclick=async()=>{
+  const t=$("txt").value.trim();
+  if(!t&&!img){$("st").textContent="Add some text or a screenshot first.";return}
+  if(!sample){$("st").textContent="AI engine unavailable in this view.";return}
+  $("go").disabled=true;$("st").textContent="Tracing the source…";$("out").innerHTML="";
+  try{
+    const opts={modelTier:"default",cache:false};
+    if(img){let lim={};try{lim=await sample.limits()}catch(e){}
+      if(lim&&lim.images)opts.images=extra.length?extra:[img];else $("st").textContent="Screenshots unsupported here; checking text only…"}
+    const dom=checkDomains(t);const dnote=dom.length?"\nAUTOMATED DOMAIN CHECK: "+dom.map(d=>d.h+": "+d.f.join("; ")).join(" | "):"";
+    const r=await sample.json(PROMPT+"\n\nUSER SUBMISSION:\n"+(t||"(screenshot only)")+dnote,opts);
+    render(r,dom);saveH(r);$("st").textContent="";
+  }catch(e){$("st").innerHTML='<span class="err">'+esc(e&&e.code==="not_granted"?"Permission to use the AI engine was declined.":e&&e.code==="rate_limited"?"Too many checks, wait a moment.":"Something went wrong, try again.")+"</span>"}
+  $("go").disabled=false;
+};
+
+function render(r,dom){
+  const v=LABEL[r.verdict]?r.verdict:"unverified",o=r.origin||{},os=r.original_story||{};
+  const q=encodeURIComponent(r.search_query||r.claim||"");
+  const who=(r.who||[]).map(w=>`<div class="mini"><b>${esc(w.name)}</b><span class="mu">${esc(w.role)}</span><div>${esc(w.note)}</div></div>`).join("")||'<div class="mu">No named people or organisations found.</div>';
+  const links=OUTLETS.map(([n,d])=>`<a target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=${encodeURIComponent("site:"+d+" ")+q}">${n}</a>`).join("");
+  $("out").innerHTML=`
+  <section class="card"><div class="row" style="margin:0;justify-content:space-between"><div><span class="badge v-${v}">${LABEL[v]}</span><p style="margin:8px 0 0"><b>${esc(r.claim)}</b></p></div><div class="score v-${v}">${esc(r.score)}<span class="mu" style="font-size:14px;font-weight:400">/100</span></div></div><p>${esc(r.summary)}</p></section>
+  <section class="card"><h3>1 · Origin and source reputation</h3><div class="grid"><div class="mini"><b>${esc(o.source||"Unknown")}</b><span class="mu">${esc(o.type)}</span></div><div class="mini"><b>Track record: ${esc(o.reputation||"unknown")}</b></div></div><p>${esc(o.reasoning)}</p></section>
+  <section class="card"><h3>2 · Original version from credible outlets</h3><p>${esc(os.text)}</p><p class="mu">Confidence: ${esc(os.confidence||"low")}</p><div class="chips">${links}</div>
+  <div class="note">Prototype note: the summary comes from the AI's own knowledge, not live news feeds. The outlet buttons open a search on each site so you can confirm. Pro would pull these articles live.</div></section>
+  <section class="card"><h3>3 · Who, where, when</h3><div class="grid">${who}<div class="mini"><b>Where</b>${esc(r.where||"Not stated")}</div><div class="mini"><b>When</b>${esc(r.when||"Not stated")}</div></div></section>
+  <section class="card"><h3>Red flags</h3><ul>${(r.red_flags||[]).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None spotted</li>"}</ul><h3 style="margin-top:14px">Next steps</h3><ul>${(r.next_steps||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`;
+  const a=r.ai_check;if(a){const pc=x=>x==null?"n/a":esc(x)+"%";$("out").insertAdjacentHTML("beforeend",`<section class="card"><h3>4 · AI-generated or edited?</h3><div class="grid"><div class="mini"><b>Text: ${pc(a.text_ai_likelihood)}</b><span class="mu">chance it is AI-written</span></div><div class="mini"><b>Image or video: ${pc(a.media_ai_likelihood)}</b><span class="mu">chance it is AI-made or edited</span></div><div class="mini"><b>Confidence: ${esc(a.confidence||"low")}</b></div></div><ul>${(a.manipulation_signals||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p>${esc(a.basis)}</p><div class="note">These are signals, not proof. No detector, including this one, can reliably tell real from AI, and human writing is often wrongly flagged. For video only a few still frames are examined, not audio or motion. Confirm with the original uploader, a reverse image search and the outlet’s own coverage.</div></section>`)}
+  if(dom&&dom.length)$("out").insertAdjacentHTML("beforeend",`<section class="card"><h3>Domain check</h3>${dom.map(d=>`<p style="margin:6px 0 0"><b>${esc(d.h)}</b></p><ul>${d.f.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`).join("")}<div class="note">Automated starter rules, not a complete blocklist.</div></section>`);
+  if(dl){const row=document.createElement("div");row.className="row";row.innerHTML='<button class="p" id="shr">Save verdict card</button>';$("out").appendChild(row);
+    $("shr").onclick=async()=>{try{const b=await cardBlob(r);await dl.save({filename:"scamfix-verdict.png",data:b})}catch(e){if(!e||e.code!=="declined")$("st").textContent="Could not save the card."}}}
+  $("out").scrollIntoView({behavior:"smooth"});
+}
+
+const SHORT=["bit.ly","t.co","tinyurl.com","goo.gl","ow.ly","is.gd","cutt.ly","rb.gy"];
+const SATIRE=["theonion.com","babylonbee.com","clickhole.com","thedailymash.co.uk","waterfordwhispersnews.com","newsthump.com"];
+const BRANDS={bbc:["bbc.com","bbc.co.uk"],cnn:["cnn.com"],reuters:["reuters.com"],apnews:["apnews.com"],aljazeera:["aljazeera.com"],nytimes:["nytimes.com"],theguardian:["theguardian.com"],washingtonpost:["washingtonpost.com"],citizendigital:["citizen.digital"],nationafrica:["nation.africa"]};
+const BADTLD=["xyz","top","click","buzz","icu","gq","tk","ml","cf"];
+const SOCIAL=["facebook.com","x.com","twitter.com","tiktok.com","t.me","instagram.com","youtube.com"];
+const isD=(h,d)=>h===d||h.endsWith("."+d);
+function checkDomains(t){const seen=new Set(),res=[];
+ (t.match(/(?:[a-z0-9-]+\.)+[a-z]{2,}/gi)||[]).forEach(m=>{const h=m.toLowerCase().replace(/^www\./,"");if(seen.has(h))return;seen.add(h);const f=[];
+  if(SHORT.some(d=>isD(h,d)))f.push("Link shortener: hides the real destination");
+  if(SATIRE.some(d=>isD(h,d)))f.push("Known satire site: not real news");
+  const flat=h.replace(/[-.]/g,"");
+  for(const b in BRANDS)if(flat.includes(b)&&!BRANDS[b].some(d=>isD(h,d)))f.push("Imitates "+b+" but is not its official domain");
+  if(BADTLD.includes(h.split(".").pop()))f.push("Domain ending often used by throwaway sites");
+  if(SOCIAL.some(d=>isD(h,d)))f.push("Social platform: anyone can post, so this is not a publisher");
+  if(f.length)res.push({h,f})});
+ return res}
+
+function getH(){try{return JSON.parse(localStorage.getItem("sfh")||"[]")}catch(e){return[]}}
+function saveH(r){const h=getH();h.unshift({c:String(r.claim||"").slice(0,140),v:r.verdict,s:r.score,t:Date.now()});try{localStorage.setItem("sfh",JSON.stringify(h.slice(0,10)))}catch(e){}renderH()}
+function renderH(){const h=getH();$("histc").style.display=h.length?"block":"none";$("hist").innerHTML=h.map(x=>`<div class="mini" style="margin-bottom:8px"><span class="badge v-${LABEL[x.v]?x.v:"unverified"}">${LABEL[x.v]||"Unverified"} · ${esc(x.s)}</span> <span class="mu">${new Date(x.t).toLocaleDateString()}</span><div>${esc(x.c)}</div></div>`).join("")}
+$("hclr").onclick=()=>{try{localStorage.removeItem("sfh")}catch(e){}renderH()};
+renderH();
+
+let dl=null;(async()=>{try{dl=await claude.use("downloads")}catch(e){dl=null}})();
+const COL={likely_true:"#2fbf94",unverified:"#98a3b3",misleading:"#e0a84a",likely_false:"#ef6a5b"};
+function lines(c,t,w){const out=[];let l="";for(const s of t.split(/\s+/)){const x=l?l+" "+s:s;if(c.measureText(x).width>w&&l){out.push(l);l=s}else l=x}if(l)out.push(l);return out}
+function cardBlob(r){return new Promise(res=>{const v=LABEL[r.verdict]?r.verdict:"unverified",cv=document.createElement("canvas");cv.width=cv.height=1080;const c=cv.getContext("2d"),F="system-ui,Segoe UI,Roboto,sans-serif";
+ c.fillStyle="#0f1318";c.fillRect(0,0,1080,1080);c.fillStyle=COL[v];c.fillRect(0,0,1080,16);
+ c.font="700 44px "+F;c.fillStyle="#e8ecf1";c.fillText("Scamfix",64,110);
+ c.font="800 76px "+F;c.fillStyle=COL[v];c.fillText(LABEL[v].toUpperCase(),64,260);
+ c.font="800 170px "+F;c.fillText(String(r.score),64,450);
+ c.font="500 36px "+F;c.fillStyle="#98a3b3";c.fillText("credibility score out of 100",64,505);
+ c.font="600 44px "+F;c.fillStyle="#e8ecf1";
+ let L=lines(c,String(r.claim||""),950);if(L.length>7){L=L.slice(0,7);L[6]=L[6].replace(/\s*\S*$/,"")+"…"}
+ L.forEach((s,i)=>c.fillText(s,64,600+i*60));
+ c.font="500 30px "+F;c.fillStyle="#98a3b3";c.fillText("Checked with Scamfix · verify before you share",64,1030);
+ cv.toBlob(res,"image/png")})}
+
+document.querySelectorAll(".tier button").forEach(b=>b.onclick=()=>{
+  let c={};try{c=JSON.parse(localStorage.getItem("sfv")||"{}")}catch(e){}
+  c[b.dataset.t]=(c[b.dataset.t]||0)+1;try{localStorage.setItem("sfv",JSON.stringify(c))}catch(e){}
+  $("vote").textContent="Thanks! Noted interest in "+b.dataset.t+" on this device.";
+});
+</script></body></html>
