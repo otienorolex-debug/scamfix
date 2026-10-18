@@ -3,6 +3,8 @@
 **Check before you share.** Scamfix traces where a viral claim came from, finds the real story from trusted outlets, and flags AI-written or edited content.
 
 > Status: working prototype (proof of concept). Looking for feedback, testers and collaborators.
+>
+> Live prototype: https://claude.ai/artifact/4rLhswaBCr1J6ypmVAuy6W
 
 ## The problem
 
